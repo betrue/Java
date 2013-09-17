@@ -3,6 +3,7 @@ import java.awt.event.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 
 import java.awt.event.*;
@@ -13,23 +14,41 @@ import java.util.Random;
  
 class PikachuGame {
 	
-	final int imagesCount = 11; // count of images for cards
+	// const
+	final int imagesCount = 28; // count of images for cards
 	final int fieldWidth = 12; // width of field (cards) = x56 px
 	final int fieldHeight = 7; // height of field (cards) = x72 px
+	
+	final String strScore = new String("Очков: ");
+	// --
+	
 	private BufferedImage[] images = new BufferedImage[imagesCount]; // image array for cards
+	
 	// borders for panels
 	private Border brdRaisedBevel = BorderFactory.createRaisedBevelBorder(); // -- free
+	private Border brdBlackLine = BorderFactory.createLineBorder(Color.BLACK); // -- selected
+	
 	// field
-	private byte[][] mainField = new byte[fieldWidth][fieldHeight];
+	private byte[][] mainField = new byte[fieldHeight][fieldWidth];
 	// cards on field
-	private PicturePanel[][] cards = new PicturePanel[fieldWidth][fieldHeight];
+	private PicturePanel[][] cards = new PicturePanel[fieldHeight][fieldWidth];
+	
+	// states and conditions
+	private Dimension coordFrom = new Dimension(0, 0);
+	private Dimension coordTo = new Dimension(0, 0); // -- coords of start and finish
+	private boolean isStartSelected = false;
+	
+	// information
+	private JLabel lbStatus = new JLabel("Начало игры");
+	private JLabel lbScore = new JLabel(strScore + "0");
+	private JLabel lbChangingScore = new JLabel("0");
 	
 	PikachuGame() {
 		
 		// **** Загрузка картинок для карточек ****
 		try {
 			for (int i = 0; i < imagesCount; i++) {
-				images[i] = ImageIO.read(new java.io.File("C:\\Distr\\Java\\eclipse-java-juno-SR2-win32\\workspace\\PikachuGame\\src\\images\\" + String.valueOf(i) + ".png"));
+				images[i] = ImageIO.read(new java.io.File("images\\" + String.valueOf(i) + ".png"));
 			}
 		} catch (IOException ex) {
 			System.err.println("Ошибка загрузки картинки");
@@ -38,6 +57,7 @@ class PikachuGame {
 		
 		// Новый главный контейнер
 		JFrame jfrm = new JFrame("Pikachu game");
+		jfrm.setLayout(new BorderLayout());
 		// Настройка размеров и положения
 		jfrm.setMinimumSize(new Dimension(780, 600));
 		jfrm.setSize(780, 600);
@@ -72,10 +92,6 @@ class PikachuGame {
 		JMenuItem mitemNew = new JMenuItem("Новый расклад"); // subitem - new game
 		menuGame.add(mitemNew);
 		
-		JMenuItem mitemHint = new JMenuItem("Подсказка"); // subitem - hint
-		menuGame.add(mitemHint);
-		mitemHint.setEnabled(false); // потому что пока не реализовано
-		
 		menuGame.addSeparator();
 		
 		JMenuItem mitemConfig = new JMenuItem("Настройки"); // subitem - configuration
@@ -101,12 +117,14 @@ class PikachuGame {
 		GridBagConstraints gbConstr = new GridBagConstraints();
 		for (int i = 0; i < fieldHeight; i++)
 			for (int j = 0; j < fieldWidth; j++) {
-				cards[j][i] = new PicturePanel();
+				cards[i][j] = new PicturePanel();
+				cards[i][j].setPosition(new Dimension(j, i));
+				cards[i][j].addMouseListener(new CardMouseListener());
 				gbConstr.fill = GridBagConstraints.HORIZONTAL;
 				gbConstr.weightx = 0.5; // balance weight
 				gbConstr.gridx = j; // cell at X axis
 				gbConstr.gridy = i; // cell at Y axis
-				panel.add(cards[j][i], gbConstr);
+				panel.add(cards[i][j], gbConstr);
 			}
 		arrangeElements(1);
 		hBox.add(panel);
@@ -117,8 +135,23 @@ class PikachuGame {
 		vBox.add(hBox);
 		vBox.add(Box.createGlue());
 		
-		jfrm.setLayout(new BorderLayout());
 		jfrm.add(vBox);
+		
+		// панель статуса
+		JPanel statusPanel = new JPanel();
+		statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
+		jfrm.add(statusPanel, BorderLayout.SOUTH);
+		statusPanel.setPreferredSize(new Dimension(jfrm.getWidth(), 20));
+		statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
+		
+		Box hStatusBox = Box.createHorizontalBox();
+		hStatusBox.add(lbScore);
+		hStatusBox.add(Box.createGlue());
+		hStatusBox.add(lbChangingScore);
+		hStatusBox.add(Box.createGlue());
+		hStatusBox.add(lbStatus);
+		
+		statusPanel.add(hStatusBox);
 		
 		jfrm.pack();
 		
@@ -138,10 +171,10 @@ class PikachuGame {
 	public void arrangeElements(int level) {
 		
 		// this block will changed in future for loading samples
-		byte[][] sampleField = new byte[fieldWidth][fieldHeight];
+		byte[][] sampleField = new byte[fieldHeight][fieldWidth];
 		for (int i = 0; i < fieldHeight; i++)
 			for (int j = 0; j < fieldWidth; j++)
-				sampleField[j][i] = 0;
+				sampleField[i][j] = 0;
 		// -- /
 		
 		System.arraycopy(sampleField, 0, mainField, 0, sampleField.length);
@@ -156,8 +189,8 @@ class PikachuGame {
 			for (int i = 0; i < 2; i++) {
 				isOccupiedCell = true;
 				while (isOccupiedCell) {
-					row = rnd.nextInt(fieldWidth);
-					column = rnd.nextInt(fieldHeight);
+					row = rnd.nextInt(fieldHeight);
+					column = rnd.nextInt(fieldWidth);
 					if (mainField[row][column] == 0) {
 						mainField[row][column] = (byte) (index + 1);
 						cards[row][column].setImage(images[index]);
@@ -168,7 +201,86 @@ class PikachuGame {
 				cells--; // decrement free cells count
 			}
 		}
+		isStartSelected = false;
 		
+	}
+	
+	private boolean isCardsEquals(Dimension coords1, Dimension coords2) {
+		return mainField[coords1.height][coords1.width] == mainField[coords2.height][coords2.width] ? true : false;
+	}
+	
+	// ======================= СОБЫТИЯ МЫШИ ДЛЯ КАРТОЧЕК ========================
+	public class CardMouseListener implements MouseListener {
+
+        public void mouseClicked(MouseEvent e) {
+        	PicturePanel pp = (PicturePanel) e.getSource(); // caller object
+        	Dimension clickPosition = new Dimension(0, 0); // card position
+        	clickPosition = pp.getPosition();
+        	if (mainField[clickPosition.height][clickPosition.width] == 0) // if empty card
+        		return;
+        	// if start not selected yet
+        	if (!isStartSelected) { 
+        		coordFrom = clickPosition; // remember coords
+        		pp.setBorder(brdBlackLine); // visual
+        		isStartSelected = true;
+        	} else {
+        		coordTo = clickPosition;
+        		// if the same card or wrong card
+        		if ((coordFrom.equals(coordTo)) || (!isCardsEquals(clickPosition, coordFrom))) {
+        			cards[coordFrom.height][coordFrom.width].setBorder(brdRaisedBevel);
+        			isStartSelected = false;
+        		} else {
+        			// this place for calculate way!!!!!!!!!!!!
+        			mainField[coordFrom.height][coordFrom.width] = 0;
+        			mainField[coordTo.height][coordTo.width] = 0;
+        			cards[coordFrom.height][coordFrom.width].setImage(null);
+        			cards[coordTo.height][coordTo.width].setImage(null);
+        			cards[coordFrom.height][coordFrom.width].setBorder(brdRaisedBevel);
+        			cards[coordTo.height][coordTo.width].setBorder(brdRaisedBevel);
+        			isStartSelected = false;
+        		}
+        	}
+        	/*
+             JButton button = (JButton) e.getSource();
+             String text = "<html><b>" + button.getText()
+                       + " mouseReleased() <br>" + button.getText()
+                       + " mouseClicked() </b><html>";
+             eventLabel.setText(text);
+            */
+        }
+        
+        public void mouseEntered(MouseEvent e) {
+        	return;
+        	/*
+             JButton button = (JButton) e.getSource();
+             eventLabel.setText(button.getText() + " mouseEntered()");
+            */
+        }
+
+        public void mouseExited(MouseEvent e) {
+        	return;
+        	/*
+             JButton button = (JButton) e.getSource();
+             eventLabel.setText(button.getText() + " mouseExited()");
+            */
+        }
+        
+        public void mousePressed(MouseEvent e) {
+        	return;
+        	/*
+             JButton button = (JButton) e.getSource();
+             eventLabel.setText(button.getText() + " mousePressed()");
+            */
+        }
+
+        public void mouseReleased(MouseEvent e) {
+        	return;
+        	/*
+             JButton button = (JButton) e.getSource();
+             eventLabel.setText(button.getText() + " mouseReleased()");
+            */
+        }
+        
 	}
     
     public static void main(String[] args) {
