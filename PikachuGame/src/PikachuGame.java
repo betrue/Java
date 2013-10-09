@@ -1,66 +1,52 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
-
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Random;
  
 class PikachuGame {
 	
 	// const
-	final int imagesCount = 28; // count of images for cards
-	final int fieldWidth = 12; // width of field (cards) = x56 px
-	final int fieldHeight = 7; // height of field (cards) = x72 px
+	enum GameState { DEFAULT, START, WRONG_CARDS, TOO_FAR }
 	
 	final String strScore = new String("Очков: ");
+	final String strStart = new String("Начало игры");
+	final String strWrongCards = new String("На карточках разные картинки");
+	final String strTooFar = new String("Нет подходящего пути");
 	// --
 	
-	private BufferedImage[] images = new BufferedImage[imagesCount]; // image array for cards
-	
-	// borders for panels
-	private Border brdRaisedBevel = BorderFactory.createRaisedBevelBorder(); // -- free
-	private Border brdBlackLine = BorderFactory.createLineBorder(Color.BLACK); // -- selected
-	
-	// field
-	private byte[][] mainField = new byte[fieldHeight][fieldWidth];
-	// cards on field
-	private PicturePanel[][] cards = new PicturePanel[fieldHeight][fieldWidth];
-	
-	// states and conditions
-	private Dimension coordFrom = new Dimension(0, 0);
-	private Dimension coordTo = new Dimension(0, 0); // -- coords of start and finish
-	private boolean isStartSelected = false;
+	JFrame jfrm; // main window
+	Field field; // main field
+	JProgressBar pbTimer; // timer
+	Timer tTimer;
 	
 	// information
-	private JLabel lbStatus = new JLabel("Начало игры");
+	private JLabel lbStatus = new JLabel(strStart);
 	private JLabel lbScore = new JLabel(strScore + "0");
 	private JLabel lbChangingScore = new JLabel("0");
 	
+	// points
+	private int points;
+	
+	private int timerValue = 0; // значение таймера
+	private int levelMaxTimer; // время на прохождение текущего уровня
+	private List<Color> lstColors = new ArrayList<Color>();
+	private ColorGradient cgTimer;
+	
+	// child frames
+	private FrmConfiguration frmConfiguration = null;
+	
+	
+	@SuppressWarnings("static-access")
 	PikachuGame() {
-		
-		// **** Загрузка картинок для карточек ****
-		try {
-			for (int i = 0; i < imagesCount; i++) {
-				images[i] = ImageIO.read(new java.io.File("images\\" + String.valueOf(i) + ".png"));
-			}
-		} catch (IOException ex) {
-			System.err.println("Ошибка загрузки картинки");
-			ex.printStackTrace();
-		}
-		
 		// Новый главный контейнер
-		JFrame jfrm = new JFrame("Pikachu game");
+		jfrm = new JFrame("Pikachu game");
 		jfrm.setLayout(new BorderLayout());
 		// Настройка размеров и положения
-		jfrm.setMinimumSize(new Dimension(780, 600));
-		jfrm.setSize(780, 600);
+		jfrm.setMinimumSize(new Dimension(860, 720));
+		jfrm.setSize(860, 720);
 		jfrm.setLocationRelativeTo(null);
 		// Обработка завершения программы
 		jfrm.setDefaultCloseOperation(jfrm.DO_NOTHING_ON_CLOSE);
@@ -85,6 +71,9 @@ class PikachuGame {
 			}
 		});
 		
+		// field = new Field(4, 3); // creating a field
+		field = new Field(); // creating a field
+		
 		// **** Основное меню ****
 		JMenuBar mainMenu = new JMenuBar(); // bar
 		JMenu menuGame = new JMenu("Игра"); // item - game
@@ -96,18 +85,40 @@ class PikachuGame {
 		
 		JMenuItem mitemConfig = new JMenuItem("Настройки"); // subitem - configuration
 		menuGame.add(mitemConfig);
-		mitemConfig.setEnabled(false); // потому что пока не реализовано
+		// mitemConfig.setEnabled(false); // потому что пока не реализовано
 		
 		mainMenu.add(menuGame); // adding to main frame
 		jfrm.setJMenuBar(mainMenu); // linking
 		
 		// для компоновки по центру
 		Box hBox = Box.createHorizontalBox();
+		
+		pbTimer = new JProgressBar(SwingConstants.VERTICAL);
+		lstColors.add(Color.RED);
+		lstColors.add(Color.YELLOW);
+		lstColors.add(Color.GREEN);
+		cgTimer = new ColorGradient(lstColors);
+		// pbTimer.setPreferredSize(new Dimension(20, hBox.HEIGHT));
+		pbTimer.setMinimum(0);
+		hBox.add(pbTimer);
+		
+		tTimer = new Timer(1000, new ActionListener() {
+				public void actionPerformed(ActionEvent ev) {
+					changeTimer(--timerValue);
+					if (timerValue == 0) {
+						tTimer.stop();
+		        		showMessage("Время вышло!",
+								"Проигрыш");
+					}
+				}
+		});
+		tTimer.stop();
+		
 		hBox.add(Box.createGlue());
 		
 		// **** панель карточек ****
 		JPanel panel = new JPanel();
-		Dimension panelSize = new Dimension(672, 504);
+		Dimension panelSize = new Dimension(field.getWidth() * field.cardWidth, field.getHeight() * field.cardHeight);
 		panel.setLayout(new GridBagLayout());
 		panel.setOpaque(false);
 		panel.setPreferredSize(panelSize);
@@ -115,18 +126,17 @@ class PikachuGame {
 		panel.setMinimumSize(panelSize);
 		panel.setMaximumSize(panelSize);
 		GridBagConstraints gbConstr = new GridBagConstraints();
-		for (int i = 0; i < fieldHeight; i++)
-			for (int j = 0; j < fieldWidth; j++) {
-				cards[i][j] = new PicturePanel();
-				cards[i][j].setPosition(new Dimension(j, i));
-				cards[i][j].addMouseListener(new CardMouseListener());
-				gbConstr.fill = GridBagConstraints.HORIZONTAL;
-				gbConstr.weightx = 0.5; // balance weight
-				gbConstr.gridx = j; // cell at X axis
-				gbConstr.gridy = i; // cell at Y axis
-				panel.add(cards[i][j], gbConstr);
-			}
-		arrangeElements(1);
+		
+		for (PicturePanel i : field.getCards()) {
+			i.addMouseListener(new CardMouseListener());
+			gbConstr.fill = GridBagConstraints.HORIZONTAL;
+			gbConstr.weightx = 0.5; // balance weight
+			gbConstr.gridx = i.getPosition().width; // cell at X axis
+			gbConstr.gridy = i.getPosition().height; // cell at Y axis
+			panel.add(i, gbConstr);
+		}
+		
+		newGame(1);
 		hBox.add(panel);
 		hBox.add(Box.createGlue());
 		
@@ -149,6 +159,8 @@ class PikachuGame {
 		hStatusBox.add(Box.createGlue());
 		hStatusBox.add(lbChangingScore);
 		hStatusBox.add(Box.createGlue());
+		lbStatus.setHorizontalAlignment(JLabel.RIGHT);
+		lbStatus.setPreferredSize(new Dimension(300, lbStatus.getHeight()));
 		hStatusBox.add(lbStatus);
 		
 		statusPanel.add(hStatusBox);
@@ -160,7 +172,19 @@ class PikachuGame {
 		
 		mitemNew.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				arrangeElements(1);
+				newGame(1);
+			}
+		});
+		
+		mitemConfig.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				frmConfiguration = new FrmConfiguration(jfrm);
+				tTimer.stop();
+				if (frmConfiguration.execute()) {
+					
+				} else {
+					
+				}
 			}
 		});
 		
@@ -168,45 +192,77 @@ class PikachuGame {
 		jfrm.setVisible(true);
 	}
 	
-	public void arrangeElements(int level) {
-		
-		// this block will changed in future for loading samples
-		byte[][] sampleField = new byte[fieldHeight][fieldWidth];
-		for (int i = 0; i < fieldHeight; i++)
-			for (int j = 0; j < fieldWidth; j++)
-				sampleField[i][j] = 0;
-		// -- /
-		
-		System.arraycopy(sampleField, 0, mainField, 0, sampleField.length);
-		int cells = fieldWidth * fieldHeight; // cell count for filling
-		Random rnd = new Random(); // initilize random generator
-		int row, column; // vars for coordinating in array
-		byte index = 0; // index for image on card
-		boolean isOccupiedCell; // flg cell is occupied
-		while (cells > 0) {
-			index = (byte) rnd.nextInt(imagesCount);
-			// добавлять нужно сразу пару
-			for (int i = 0; i < 2; i++) {
-				isOccupiedCell = true;
-				while (isOccupiedCell) {
-					row = rnd.nextInt(fieldHeight);
-					column = rnd.nextInt(fieldWidth);
-					if (mainField[row][column] == 0) {
-						mainField[row][column] = (byte) (index + 1);
-						cards[row][column].setImage(images[index]);
-						cards[row][column].setBorder(brdRaisedBevel);
-						isOccupiedCell = false;
-					}
-				}
-				cells--; // decrement free cells count
-			}
+	// вывод сообщения
+	private void showMessage(String messageText, String title) {
+		Object[] options = {
+				"Новая игра",
+				"Выход"
+		};
+		int rslt = JOptionPane.showOptionDialog(jfrm,
+				messageText,
+				title,
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.INFORMATION_MESSAGE,
+				null,
+				options,
+				options[1]);
+		if (rslt == 0) {
+			newGame(1);
+		} else {
+			jfrm.setVisible(false);
+			System.exit(0);
 		}
-		isStartSelected = false;
-		
 	}
 	
-	private boolean isCardsEquals(Dimension coords1, Dimension coords2) {
-		return mainField[coords1.height][coords1.width] == mainField[coords2.height][coords2.width] ? true : false;
+	// счёт времени
+	private void changeTimer(int value) {
+		pbTimer.setValue(value);
+		pbTimer.setForeground(cgTimer.getColorByPercent(((float) value) / (pbTimer.getMaximum() - pbTimer.getMinimum()), true));
+	}
+	
+	public void changeScore(int changePoints) {
+		if (changePoints > 0) {
+			lbChangingScore.setText("+" + String.valueOf(changePoints));
+		} else if (changePoints < 0) {
+			lbChangingScore.setText("-" + String.valueOf(changePoints));
+		} else
+			lbChangingScore.setText(String.valueOf(0));
+		points = points + changePoints;
+		lbScore.setText(strScore + String.valueOf(points));
+	}
+	
+	public void changeState(GameState state) {
+		switch (state) {
+		case START :
+			lbStatus.setForeground(Color.BLACK);
+			lbStatus.setText(strStart);
+			break;
+		case WRONG_CARDS :
+			lbStatus.setForeground(Color.RED);
+			lbStatus.setText(strWrongCards);
+			break;
+		case TOO_FAR :
+			lbStatus.setForeground(Color.RED);
+			lbStatus.setText(strTooFar);
+			break;
+		case DEFAULT :
+			lbStatus.setForeground(Color.BLACK);
+			lbStatus.setText("");
+			break;
+		}
+		// lbStatus.setPreferredSize(new Dimension(300, lbStatus.getHeight()));
+		// lbStatus.setSize(200, lbStatus.getHeight());
+	}
+	
+	public void newGame(int level) {
+		points = 0;
+		changeScore(0);
+		changeState(GameState.START);
+		field.arrangeElements(level);
+		levelMaxTimer = 400;
+		pbTimer.setMaximum(levelMaxTimer);
+		timerValue = levelMaxTimer;
+		// tTimer.start();
 	}
 	
 	// ======================= СОБЫТИЯ МЫШИ ДЛЯ КАРТОЧЕК ========================
@@ -216,37 +272,45 @@ class PikachuGame {
         	PicturePanel pp = (PicturePanel) e.getSource(); // caller object
         	Dimension clickPosition = new Dimension(0, 0); // card position
         	clickPosition = pp.getPosition();
-        	if (mainField[clickPosition.height][clickPosition.width] == 0) // if empty card
+        	if (pp.getImageIndex() == -1) // if empty card
         		return;
+        	if (!tTimer.isRunning())
+        		tTimer.start();
+        	changeScore(0);
         	// if start not selected yet
-        	if (!isStartSelected) { 
-        		coordFrom = clickPosition; // remember coords
-        		pp.setBorder(brdBlackLine); // visual
-        		isStartSelected = true;
+        	if (!field.isStartSelected) {
+        		field.coordFrom = clickPosition; // remember coords
+        		pp.setBorder(field.brdBlackLine); // visual
+        		field.isStartSelected = true;
         	} else {
-        		coordTo = clickPosition;
-        		// if the same card or wrong card
-        		if ((coordFrom.equals(coordTo)) || (!isCardsEquals(clickPosition, coordFrom))) {
-        			cards[coordFrom.height][coordFrom.width].setBorder(brdRaisedBevel);
-        			isStartSelected = false;
+        		field.coordTo = clickPosition;
+        		PicturePanel ppFrom = field.getCardByPosition(field.coordFrom);
+        		PicturePanel ppTo = field.getCardByPosition(field.coordTo);
+        		// if the same card or wrong card, then skip
+        		if ((field.coordFrom.equals(field.coordTo)) || (!field.isCardsEquals(field.coordTo, field.coordFrom))) {
+        			ppFrom.setBorder(field.brdRaisedBevel);
+        			// changeState(GameState.WRONG_CARDS);
         		} else {
-        			// this place for calculate way!!!!!!!!!!!!
-        			mainField[coordFrom.height][coordFrom.width] = 0;
-        			mainField[coordTo.height][coordTo.width] = 0;
-        			cards[coordFrom.height][coordFrom.width].setImage(null);
-        			cards[coordTo.height][coordTo.width].setImage(null);
-        			cards[coordFrom.height][coordFrom.width].setBorder(brdRaisedBevel);
-        			cards[coordTo.height][coordTo.width].setBorder(brdRaisedBevel);
-        			isStartSelected = false;
+        			int pathCost = field.getPathCost();
+        			if (pathCost == -1) {
+        				ppFrom.setBorder(field.brdRaisedBevel);
+        				changeState(GameState.TOO_FAR);
+        			} else {
+	        			field.removeCard(ppFrom);
+	        			field.removeCard(ppTo);
+	        			changeScore(pathCost);
+	        			changeState(GameState.DEFAULT);
+        			}
         		}
+        		field.isStartSelected = false;
         	}
-        	/*
-             JButton button = (JButton) e.getSource();
-             String text = "<html><b>" + button.getText()
-                       + " mouseReleased() <br>" + button.getText()
-                       + " mouseClicked() </b><html>";
-             eventLabel.setText(text);
-            */
+        	if (field.getActiveCardCount() == 0) {
+        		tTimer.stop();
+        		showMessage("Вы выиграли!\n" +
+							"Потраченное время: " + String.valueOf(levelMaxTimer - timerValue) + " сек.\n" +
+							"Количество заработанных очков: " + String.valueOf(points),
+							"Победа");
+        	}
         }
         
         public void mouseEntered(MouseEvent e) {
