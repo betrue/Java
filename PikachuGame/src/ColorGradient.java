@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * Class for graduating colors between points.
  * Written for decreasing timer.
 */
@@ -10,15 +10,15 @@ import java.util.List;
 
 public class ColorGradient {
 	
-	private List<Color> lstColors; // список цветов (порядок важен)
-	private float[] colorPositions; // отрезки цветов (границы, на которых они действуют) - от 0.0 до 1.0
-	private int colorCount; // кол-во цветов
+	private List<Color> lstColors; // СЃРїРёСЃРѕРє С†РІРµС‚РѕРІ (РїРѕСЂСЏРґРѕРє РІР°Р¶РµРЅ)
+	private float[] colorPositions; // РѕС‚СЂРµР·РєРё С†РІРµС‚РѕРІ (РіСЂР°РЅРёС†С‹, РЅР° РєРѕС‚РѕСЂС‹С… РѕРЅРё РґРµР№СЃС‚РІСѓСЋС‚) - РѕС‚ 0.0 РґРѕ 1.0
+	private int colorCount; // РєРѕР»-РІРѕ С†РІРµС‚РѕРІ
 	
 	ColorGradient(List<Color> lstColors) {
 		colorCount = lstColors.size();
 		this.lstColors = new ArrayList<Color>(lstColors);
 		colorPositions = new float[colorCount];
-		// делим цвета на отрезки
+		// РґРµР»РёРј С†РІРµС‚Р° РЅР° РѕС‚СЂРµР·РєРё
 		for (int i = 0; i < colorCount; i++) {
 			colorPositions[i] = (float) i / (colorCount - 1);
 		}
@@ -26,7 +26,7 @@ public class ColorGradient {
 	
 	public Color getColorByPercent(float percent, boolean revert) {
 		for (int i = 1; i < colorCount; i++) {
-			if (percent < colorPositions[i]) { // ищем отрезок, на котором нужен градиент
+			if (percent < colorPositions[i]) { // РёС‰РµРј РѕС‚СЂРµР·РѕРє, РЅР° РєРѕС‚РѕСЂРѕРј РЅСѓР¶РµРЅ РіСЂР°РґРёРµРЅС‚
 				Color firstColor = lstColors.get(i-1);
 				Color secondColor = lstColors.get(i);
 				float localPoint = (percent - colorPositions[i-1]) / (colorPositions[i] - colorPositions[i-1]);
@@ -37,7 +37,7 @@ public class ColorGradient {
 						Math.round(firstColor.getBlue()*localPoint + secondColor.getBlue()*(1-localPoint)));
 			}
 		}
-		// тогда передано значение >= 1.0
+		// С‚РѕРіРґР° РїРµСЂРµРґР°РЅРѕ Р·РЅР°С‡РµРЅРёРµ >= 1.0
 		return lstColors.get(colorCount-1);
 	}
 	

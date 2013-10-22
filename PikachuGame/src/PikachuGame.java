@@ -1,4 +1,4 @@
-import java.awt.*;
+п»їimport java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,10 +11,10 @@ class PikachuGame {
 	// const
 	enum GameState { DEFAULT, START, WRONG_CARDS, TOO_FAR }
 	
-	final String strScore = new String("Очков: ");
-	final String strStart = new String("Начало игры");
-	final String strWrongCards = new String("На карточках разные картинки");
-	final String strTooFar = new String("Нет подходящего пути");
+	final String strScore = new String("РћС‡РєРѕРІ: ");
+	final String strStart = new String("РќР°С‡Р°Р»Рѕ РёРіСЂС‹");
+	final String strWrongCards = new String("РќР° РєР°СЂС‚РѕС‡РєР°С… СЂР°Р·РЅС‹Рµ РєР°СЂС‚РёРЅРєРё");
+	final String strTooFar = new String("РќРµС‚ РїРѕРґС…РѕРґСЏС‰РµРіРѕ РїСѓС‚Рё");
 	// --
 	
 	JFrame jfrm; // main window
@@ -30,8 +30,8 @@ class PikachuGame {
 	// points
 	private int points;
 	
-	private int timerValue = 0; // значение таймера
-	private int levelMaxTimer; // время на прохождение текущего уровня
+	private int timerValue = 0; // Р·РЅР°С‡РµРЅРёРµ С‚Р°Р№РјРµСЂР°
+	private int levelMaxTimer; // РІСЂРµРјСЏ РЅР° РїСЂРѕС…РѕР¶РґРµРЅРёРµ С‚РµРєСѓС‰РµРіРѕ СѓСЂРѕРІРЅСЏ
 	private List<Color> lstColors = new ArrayList<Color>();
 	private ColorGradient cgTimer;
 	
@@ -41,24 +41,24 @@ class PikachuGame {
 	
 	@SuppressWarnings("static-access")
 	PikachuGame() {
-		// Новый главный контейнер
+		// РќРѕРІС‹Р№ РіР»Р°РІРЅС‹Р№ РєРѕРЅС‚РµР№РЅРµСЂ
 		jfrm = new JFrame("Pikachu game");
 		jfrm.setLayout(new BorderLayout());
-		// Настройка размеров и положения
+		// РќР°СЃС‚СЂРѕР№РєР° СЂР°Р·РјРµСЂРѕРІ Рё РїРѕР»РѕР¶РµРЅРёСЏ
 		jfrm.setMinimumSize(new Dimension(860, 720));
 		jfrm.setSize(860, 720);
 		jfrm.setLocationRelativeTo(null);
-		// Обработка завершения программы
+		// РћР±СЂР°Р±РѕС‚РєР° Р·Р°РІРµСЂС€РµРЅРёСЏ РїСЂРѕРіСЂР°РјРјС‹
 		jfrm.setDefaultCloseOperation(jfrm.DO_NOTHING_ON_CLOSE);
 		jfrm.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
 				Object[] options = {
-						"Закрыть",
-						"Отмена"
+						"Р—Р°РєСЂС‹С‚СЊ",
+						"РћС‚РјРµРЅР°"
 				};
 				int rslt = JOptionPane.showOptionDialog(we.getWindow(),
-						"Вы уверены, что хотите закрыть приложение?",
-						"Завершение программы",
+						"Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ Р·Р°РєСЂС‹С‚СЊ РїСЂРёР»РѕР¶РµРЅРёРµ?",
+						"Р—Р°РІРµСЂС€РµРЅРёРµ РїСЂРѕРіСЂР°РјРјС‹",
 						JOptionPane.YES_NO_OPTION,
 						JOptionPane.QUESTION_MESSAGE,
 						null,
@@ -74,23 +74,23 @@ class PikachuGame {
 		// field = new Field(4, 3); // creating a field
 		field = new Field(); // creating a field
 		
-		// **** Основное меню ****
+		// **** РћСЃРЅРѕРІРЅРѕРµ РјРµРЅСЋ ****
 		JMenuBar mainMenu = new JMenuBar(); // bar
-		JMenu menuGame = new JMenu("Игра"); // item - game
+		JMenu menuGame = new JMenu("РРіСЂР°"); // item - game
 		
-		JMenuItem mitemNew = new JMenuItem("Новый расклад"); // subitem - new game
+		JMenuItem mitemNew = new JMenuItem("РќРѕРІС‹Р№ СЂР°СЃРєР»Р°Рґ"); // subitem - new game
 		menuGame.add(mitemNew);
 		
 		menuGame.addSeparator();
 		
-		JMenuItem mitemConfig = new JMenuItem("Настройки"); // subitem - configuration
+		JMenuItem mitemConfig = new JMenuItem("РќР°СЃС‚СЂРѕР№РєРё"); // subitem - configuration
 		menuGame.add(mitemConfig);
-		// mitemConfig.setEnabled(false); // потому что пока не реализовано
+		// mitemConfig.setEnabled(false); // РїРѕС‚РѕРјСѓ С‡С‚Рѕ РїРѕРєР° РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅРѕ
 		
 		mainMenu.add(menuGame); // adding to main frame
 		jfrm.setJMenuBar(mainMenu); // linking
 		
-		// для компоновки по центру
+		// РґР»СЏ РєРѕРјРїРѕРЅРѕРІРєРё РїРѕ С†РµРЅС‚СЂСѓ
 		Box hBox = Box.createHorizontalBox();
 		
 		pbTimer = new JProgressBar(SwingConstants.VERTICAL);
@@ -107,8 +107,8 @@ class PikachuGame {
 					changeTimer(--timerValue);
 					if (timerValue == 0) {
 						tTimer.stop();
-		        		showMessage("Время вышло!",
-								"Проигрыш");
+		        		showMessage("Р’СЂРµРјСЏ РІС‹С€Р»Рѕ!",
+								"РџСЂРѕРёРіСЂС‹С€");
 					}
 				}
 		});
@@ -116,7 +116,7 @@ class PikachuGame {
 		
 		hBox.add(Box.createGlue());
 		
-		// **** панель карточек ****
+		// **** РїР°РЅРµР»СЊ РєР°СЂС‚РѕС‡РµРє ****
 		JPanel panel = new JPanel();
 		Dimension panelSize = new Dimension(field.getWidth() * field.cardWidth, field.getHeight() * field.cardHeight);
 		panel.setLayout(new GridBagLayout());
@@ -147,7 +147,7 @@ class PikachuGame {
 		
 		jfrm.add(vBox);
 		
-		// панель статуса
+		// РїР°РЅРµР»СЊ СЃС‚Р°С‚СѓСЃР°
 		JPanel statusPanel = new JPanel();
 		statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
 		jfrm.add(statusPanel, BorderLayout.SOUTH);
@@ -168,7 +168,7 @@ class PikachuGame {
 		jfrm.pack();
 		
 		// ===========================================================================
-		// ================== ДЕЙСТВИЯ ===============================================
+		// ================== Р”Р•Р™РЎРўР’РРЇ ===============================================
 		
 		mitemNew.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -188,15 +188,15 @@ class PikachuGame {
 			}
 		});
 		
-		// Отображаем фрейм
+		// РћС‚РѕР±СЂР°Р¶Р°РµРј С„СЂРµР№Рј
 		jfrm.setVisible(true);
 	}
 	
-	// вывод сообщения
+	// РІС‹РІРѕРґ СЃРѕРѕР±С‰РµРЅРёСЏ
 	private void showMessage(String messageText, String title) {
 		Object[] options = {
-				"Новая игра",
-				"Выход"
+				"РќРѕРІР°СЏ РёРіСЂР°",
+				"Р’С‹С…РѕРґ"
 		};
 		int rslt = JOptionPane.showOptionDialog(jfrm,
 				messageText,
@@ -214,7 +214,7 @@ class PikachuGame {
 		}
 	}
 	
-	// счёт времени
+	// СЃС‡С‘С‚ РІСЂРµРјРµРЅРё
 	private void changeTimer(int value) {
 		pbTimer.setValue(value);
 		pbTimer.setForeground(cgTimer.getColorByPercent(((float) value) / (pbTimer.getMaximum() - pbTimer.getMinimum()), true));
@@ -265,7 +265,7 @@ class PikachuGame {
 		// tTimer.start();
 	}
 	
-	// ======================= СОБЫТИЯ МЫШИ ДЛЯ КАРТОЧЕК ========================
+	// ======================= РЎРћР‘Р«РўРРЇ РњР«РЁР Р”Р›РЇ РљРђР РўРћР§Р•Рљ ========================
 	public class CardMouseListener implements MouseListener {
 
         public void mouseClicked(MouseEvent e) {
@@ -306,10 +306,10 @@ class PikachuGame {
         	}
         	if (field.getActiveCardCount() == 0) {
         		tTimer.stop();
-        		showMessage("Вы выиграли!\n" +
-							"Потраченное время: " + String.valueOf(levelMaxTimer - timerValue) + " сек.\n" +
-							"Количество заработанных очков: " + String.valueOf(points),
-							"Победа");
+        		showMessage("Р’С‹ РІС‹РёРіСЂР°Р»Рё!\n" +
+							"РџРѕС‚СЂР°С‡РµРЅРЅРѕРµ РІСЂРµРјСЏ: " + String.valueOf(levelMaxTimer - timerValue) + " СЃРµРє.\n" +
+							"РљРѕР»РёС‡РµСЃС‚РІРѕ Р·Р°СЂР°Р±РѕС‚Р°РЅРЅС‹С… РѕС‡РєРѕРІ: " + String.valueOf(points),
+							"РџРѕР±РµРґР°");
         	}
         }
         
@@ -348,7 +348,7 @@ class PikachuGame {
 	}
     
     public static void main(String[] args) {
-    	// Создаем фрейм в потоке диспетчеризации событий
+    	// РЎРѕР·РґР°РµРј С„СЂРµР№Рј РІ РїРѕС‚РѕРєРµ РґРёСЃРїРµС‚С‡РµСЂРёР·Р°С†РёРё СЃРѕР±С‹С‚РёР№
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				new PikachuGame();

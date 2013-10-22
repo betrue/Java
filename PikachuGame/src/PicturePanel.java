@@ -1,4 +1,4 @@
-import java.awt.Color;
+п»їimport java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
@@ -13,7 +13,7 @@ public class PicturePanel extends javax.swing.JPanel {
 	public final Dimension panelSize = new Dimension(40, 50);
 	private Dimension position = new Dimension(0, 0);
 	private int imageIndex = -1;
-	// -- для поиска путей
+	// -- РґР»СЏ РїРѕРёСЃРєР° РїСѓС‚РµР№
 	public PicturePanel parent;
 	public int weight;
 	public int g;
@@ -25,7 +25,7 @@ public class PicturePanel extends javax.swing.JPanel {
 		initComponents();
 	}
 	
-	// инициализация
+	// РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ
 	private void initComponents() {
 		position = new Dimension(0, 0);
 		weight = 0;
@@ -38,7 +38,7 @@ public class PicturePanel extends javax.swing.JPanel {
 		setLayout(null);
 	}
 	
-	// прорисовка
+	// РїСЂРѕСЂРёСЃРѕРІРєР°
 	public void paint(Graphics g) {
 		if (image != null) {
 			g.drawImage(image, 0, 0, null);
@@ -52,41 +52,41 @@ public class PicturePanel extends javax.swing.JPanel {
 		super.paintBorder(g);
 	}
 	
-	// возврат картинки
+	// РІРѕР·РІСЂР°С‚ РєР°СЂС‚РёРЅРєРё
 	public BufferedImage getImage() {
 		return image;
 	}
 	
-	// установка картинки
+	// СѓСЃС‚Р°РЅРѕРІРєР° РєР°СЂС‚РёРЅРєРё
 	public void setImage(BufferedImage image, int index) {
 		this.image = image;
 		this.imageIndex = index;
 		repaint();
 	}
 	
-	// очистка картинки
+	// РѕС‡РёСЃС‚РєР° РєР°СЂС‚РёРЅРєРё
 	public void clearImage() {
 		this.image = null;
 		repaint();
 	}
 	
-	// установка цвета (альтернатива картинке)
+	// СѓСЃС‚Р°РЅРѕРІРєР° С†РІРµС‚Р° (Р°Р»СЊС‚РµСЂРЅР°С‚РёРІР° РєР°СЂС‚РёРЅРєРµ)
 	public void setColor(Color color) {
 		this.setBackground(color);
 	}
 	
-	// установка координат
+	// СѓСЃС‚Р°РЅРѕРІРєР° РєРѕРѕСЂРґРёРЅР°С‚
 	public void setPosition(Dimension position) {
 		this.position.height = position.height;
 		this.position.width = position.width;
 	}
 	
-	// возврат координат
+	// РІРѕР·РІСЂР°С‚ РєРѕРѕСЂРґРёРЅР°С‚
 	public Dimension getPosition() {
 		return position;
 	}
 	
-	// возврат индекса картинки
+	// РІРѕР·РІСЂР°С‚ РёРЅРґРµРєСЃР° РєР°СЂС‚РёРЅРєРё
 	public int getImageIndex() {
 		return imageIndex;
 	}

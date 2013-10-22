@@ -1,4 +1,4 @@
-import java.awt.BorderLayout;
+п»їimport java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -54,13 +54,13 @@ public class FrmConfiguration extends JDialog {
 		gbConstr.weighty = 0.5;
 		gbConstr.insets = new Insets(4, 6, 4, 6);
 		
-		JLabel lbWidth = new JLabel("Ширина:");
+		JLabel lbWidth = new JLabel("РЁРёСЂРёРЅР°:");
 		gbConstr.anchor = GridBagConstraints.EAST;
 		gbConstr.gridx = 0;
 		gbConstr.gridy = 0;
 		plOptions.add(lbWidth, gbConstr);
 		
-		JLabel lbHeight = new JLabel("Высота:");
+		JLabel lbHeight = new JLabel("Р’С‹СЃРѕС‚Р°:");
 		gbConstr.anchor = GridBagConstraints.EAST;
 		gbConstr.gridx = 0;
 		gbConstr.gridy = 1;
@@ -80,8 +80,8 @@ public class FrmConfiguration extends JDialog {
 		
 		this.add(plOptions, BorderLayout.PAGE_START);
 		
-		JButton btnOK = new JButton("Сохранить");
-		JButton btnCancel = new JButton("Отмена");
+		JButton btnOK = new JButton("РЎРѕС…СЂР°РЅРёС‚СЊ");
+		JButton btnCancel = new JButton("РћС‚РјРµРЅР°");
 		
 		Box bxHBottomPanel = Box.createHorizontalBox();
 		bxHBottomPanel.add(Box.createGlue());
